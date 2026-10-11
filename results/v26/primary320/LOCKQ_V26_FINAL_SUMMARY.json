@@ -1,0 +1,132 @@
+{
+  "status": "independent v2.6 evaluation completed",
+  "device": "cpu",
+  "mode": "full",
+  "in_family_sessions": 20,
+  "targeted_sessions": 12,
+  "external_sessions": 8,
+  "ordered_error": {
+    "bma5": {
+      "mean": 0.08560000000000001,
+      "low": 0.0684,
+      "high": 0.1056,
+      "n": 20
+    },
+    "stack": {
+      "mean": 0.07740000000000001,
+      "low": 0.06220000000000001,
+      "high": 0.095,
+      "n": 20
+    },
+    "v26": {
+      "mean": 0.07740000000000001,
+      "low": 0.06200000000000001,
+      "high": 0.09460499999999958,
+      "n": 20
+    }
+  },
+  "brier": {
+    "bma5": {
+      "mean": 0.12540584355507975,
+      "low": 0.10097292084761465,
+      "high": 0.15399252442076453,
+      "n": 20
+    },
+    "stack": {
+      "mean": 0.10848798000105604,
+      "low": 0.08836734062616114,
+      "high": 0.1313015849894249,
+      "n": 20
+    },
+    "v26": {
+      "mean": 0.10848798000105604,
+      "low": 0.08879719241487971,
+      "high": 0.13149938592063068,
+      "n": 20
+    }
+  },
+  "paired_error_improvement": {
+    "bma5_minus_v26": {
+      "mean": 0.008200000000000002,
+      "low": 3.4260788650542336e-19,
+      "high": 0.0174,
+      "n": 20
+    },
+    "stack_minus_v26": {
+      "mean": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n": 20
+    }
+  },
+  "independent_dynamic_recovery": {
+    "bma5": 0.9090909090909091,
+    "stack": 0.9999999999999996,
+    "v26": 0.9999999999999996
+  },
+  "targeted_dynamic_recovery": {
+    "bma5": 0.3333333333333324,
+    "stack": 0.8333333333333336,
+    "v26": 0.8333333333333336
+  },
+  "targeted_abrupt_recovery": {
+    "bma5": -3.4694469519536137e-16,
+    "stack": 0.8749999999999999,
+    "v26": 0.8749999999999999
+  },
+  "exchangeable_gain": {
+    "bma5": 0.0,
+    "stack": -0.0009999999999999992,
+    "v26": -0.0009999999999999992
+  },
+  "action": {
+    "in_family_feasible_sessions": 20,
+    "mean_coverage": 0.8608,
+    "mean_selective_risk": 0.028680794222393245,
+    "external_by_kind": [
+      {
+        "kind": "semi_markov",
+        "action_coverage": 0.767,
+        "action_selective_risk": 0.023728039433531876,
+        "action_policy_feasible": 1.0
+      },
+      {
+        "kind": "three_state",
+        "action_coverage": 0.828,
+        "action_selective_risk": 0.04377434058577544,
+        "action_policy_feasible": 1.0
+      }
+    ]
+  },
+  "external_by_kind": [
+    {
+      "kind": "semi_markov",
+      "oracle_ordered_error": 0.10300000000000001,
+      "bma5_ordered_error": 0.114,
+      "stack_ordered_error": 0.10400000000000001,
+      "v26_ordered_error": 0.10400000000000001,
+      "bma5_brier": 0.14930629732230305,
+      "stack_brier": 0.1379739188196245,
+      "v26_brier": 0.1379739188196245,
+      "v26_confidence": 0.9097662123353795
+    },
+    {
+      "kind": "three_state",
+      "oracle_ordered_error": 0.097,
+      "bma5_ordered_error": 0.116,
+      "stack_ordered_error": 0.108,
+      "v26_ordered_error": 0.108,
+      "bma5_brier": 0.15599587367152684,
+      "stack_brier": 0.1410997226314638,
+      "v26_brier": 0.1410997226314638,
+      "v26_confidence": 0.9246168317185047
+    }
+  ],
+  "adoption_criteria": {
+    "targeted_pooled_recovery": true,
+    "targeted_abrupt_recovery": true,
+    "exchangeable_null": true,
+    "ordered_error": true,
+    "all_core": true
+  }
+}
