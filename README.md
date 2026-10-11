@@ -22,7 +22,7 @@ Experiments use 16 batches of 128 shots per input and simulated device-noise pro
 ## Install and verify
 
 ```bash
-python -m pip install -e '.[full]'
+python -m pip install -e '.[verify]'
 python -m pytest -q tests/test_exact.py
 python scripts/verify_published_results.py
 ```
