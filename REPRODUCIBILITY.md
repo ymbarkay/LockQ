@@ -1,37 +1,38 @@
 # Reproducing LockQ
 
-LockQ uses an exact multiset likelihood to compare inference with and without batch time labels. This repository contains the likelihood implementation, simulation code, and result tables for the paper.
+LockQ computes an exact likelihood for an unordered multiset of measurement batches, allowing batch order to be evaluated without discarding batch structure.
 
-## Installation
+## Install
 
 ```bash
-python -m pip install -e '.[full]'
+python -m pip install -e ".[full]"
+python scripts/restore_sources.py
 ```
 
-## Exact likelihood
+## Test the likelihood
 
 ```bash
 python -m pytest -q tests/test_exact.py
 ```
 
-The tests compare the two- and three-state unordered likelihoods with exhaustive enumeration of distinct permutations, including repeated batches.
+The tests compare the exact two- and three-state unordered likelihoods with exhaustive enumeration of distinct batch permutations.
 
-## Paper results
+## Reproduce the paper's numerical results
 
 ```bash
 python scripts/verify_published_results.py
 ```
 
-This regenerates the reported estimator errors and recovery figures from the saved experimental results in `results/`. All percentages are computed from the supplied session and classifier tables.
+The result tables in `results/estimator/` and `results/classifiers/` contain the model errors and order advantages used to compute the paper's reported figures.
 
-## Run the estimator experiments
+## Run the simulation
 
 ```bash
 python experiments/run_estimator.py --mode full --out runs/estimator
 ```
 
-The full simulation uses the parameter grids and random seeds defined in the source code and takes substantially longer than the numerical checks. The quantum-classifier evaluation reads previously trained four-qubit classifier checkpoints through `--bundle-root`; model checkpoint files must be supplied separately. The provided experiment data include the selected reference probabilities and saved classification outcomes.
+The simulation uses the parameter grid and random seeds in the experiment code and may take substantial CPU time.
 
-The paper's targeted safeguard experiment uses its own calibration and evaluation protocol. Its eight exchangeable sessions and abrupt-change test are described separately from the main estimator experiments.
+The trained-classifier evaluation additionally requires the saved four-qubit classifier model checkpoints, supplied separately from the result tables. Their original training procedure is not included here.
 
-All experiments use simulated finite-shot measurements.
+The estimator study and the targeted safeguard evaluation follow the protocols described in the paper. All measurement streams are simulated.
