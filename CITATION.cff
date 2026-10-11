@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "Please cite the associated IEEE QAI 2026 paper when using LockQ."
+title: "LockQ: When Does Batch Order Matter in Finite-Shot Quantum Classification? An Exact Unordered Comparator"
+authors:
+  - family-names: Molimi
+    given-names: Youssouf Barkay
+version: 0.1.0
+date-released: 2026-10-11
