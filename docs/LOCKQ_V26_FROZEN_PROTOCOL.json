@@ -1,0 +1,76 @@
+{
+  "name": "LockQ v2.6.2 frozen six-family predictive stack",
+  "status": "frozen before v2.6 full test-stream generation; smoke-only runtime amendments recorded",
+  "runtime": "single PyTorch CPU thread to avoid a reproduced repeated-call thread-pool deadlock; scientific calculations unchanged",
+  "seed": 20260728,
+  "primary_objective": "ordered reference-decision log loss and error",
+  "secondary_diagnostic": "ordered-versus-exact-unordered gain and oracle-gap recovery",
+  "calibration_design": "equal symmetric allocation at two Gauss--Legendre nodes in each of the five pre-existing reference-margin strata",
+  "candidate_families": [
+    "latent_static",
+    "iid_mode_mixture",
+    "persistent_markov",
+    "abrupt_single_change",
+    "smooth_drift",
+    "persistent_markov_3state"
+  ],
+  "family_support": "all structural families retained; only within-family parameter support is reduced by posterior mass",
+  "combination": "six-family predictive stacking optimized by cross-fitted reference-decision log score",
+  "lambda_selection": "nested calibration-only folds with one-standard-error preference for stronger regularization",
+  "margin_adaptation": "two preregistered regimes at estimated reference margin 0.10",
+  "parameter_support": {
+    "posterior_mass": 0.999,
+    "minimum": {
+      "latent_static": 2,
+      "iid_mode_mixture": 2,
+      "persistent_markov": 3,
+      "abrupt_single_change": 5,
+      "smooth_drift": 3,
+      "persistent_markov_3state": 2
+    }
+  },
+  "abrupt_change": "exact sum over every possible change location within every retained candidate; uncertainty over centre and spread retained by posterior mass",
+  "risk_controller": "simultaneously calibrated ordered/unordered/abstain policy",
+  "risk_target": 0.1,
+  "risk_alpha": 0.05,
+  "lambda_grid": [
+    0.0,
+    0.01,
+    0.03,
+    0.1,
+    0.3,
+    1.0,
+    3.0
+  ],
+  "action_dynamic_probability_grid": [
+    0.25,
+    0.5,
+    0.75
+  ],
+  "action_confidence_grid": [
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.93,
+    0.95,
+    0.97,
+    0.99
+  ],
+  "boundary_cutoff": 0.1,
+  "sizes": {
+    "mode": "full",
+    "n_base_binary": 12,
+    "n_base_three": 8,
+    "n_sessions_per_family": 4,
+    "n_calibration_records": 320,
+    "test_records_per_margin_stratum": 50
+  },
+  "adoption_criteria": {
+    "targeted_pooled_recovery_minimum": 0.4,
+    "targeted_abrupt_recovery_minimum": 0.4,
+    "exchangeable_absolute_gain_maximum": 0.002,
+    "ordered_error_must_not_exceed_best_baseline": true,
+    "external_selective_risk_target": 0.1
+  }
+}
