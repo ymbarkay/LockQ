@@ -1,49 +1,46 @@
 # LockQ
 
 **When Does Batch Order Matter in Finite-Shot Quantum Classification? An Exact Unordered Comparator**  
-Youssouf Barkay Molimi · IEEE QAI 2026
+IEEE QAI 2026 · Youssouf Barkay Molimi
 
-LockQ measures the value of **batch order in finite-shot quantum classification**. It compares predictions from time-ordered measurement batches with predictions from the **exact unordered multiset of those same batches**. The comparison preserves each batch and removes only its time label, separating the information in order from the information in batching.
+LockQ evaluates whether time order improves the reference decision of a finite-shot quantum classifier. The exact unordered comparator retains the same multiset of measurement batches but discards their time labels. Six noise-drift models are combined by cross-fitted predictive stacking.
 
-The estimator combines six models of device drift using cross-fitted predictive stacking. The paper also develops a permutation-based safeguard and a calibrated selective-prediction rule.
-
-## Results
-
-| Experiment | Result |
-| --- | ---: |
-| Reference-decision error | **7.74%** (8.56% with Bayesian model averaging) |
-| Order advantage recovered on the dynamic panel | **83.3%** |
-| Order advantage recovered under abrupt changes | **87.5%** |
-| Order advantage recovered on trained classifiers near the decision boundary | **68.8%** |
-| Safeguard on exchangeable sessions | **Zero ordered advantage** |
-
-Experiments use 16 batches of 128 shots per input and simulated device-noise processes. The estimator and safeguard experiments use their respective protocols described in the paper.
-
-## Install and verify
+## Install
 
 ```bash
 python -m pip install -e '.[verify]'
-python -m pytest -q tests/test_exact.py
+python -m pytest -q tests
 python scripts/verify_published_results.py
 ```
 
-The tests compare the exact unordered likelihood with exhaustive permutation enumeration. The results script reconstructs the reported estimator measurements and recovery figures from the supplied experiment results.
+The verification script recomputes the paper's headline estimator and trained-classifier metrics, the five- versus six-model BMA confidence intervals, and confidence intervals over independent classifier configurations, using the supplied experiment outputs. **These checks recalculate saved outputs; they do not rerun the simulations.**
 
-## Code and results
+## Regenerate simulations
 
-| Directory | Contents |
-| --- | --- |
-| `lockq/` | Exact unordered likelihood for two- and three-state models |
-| `experiments/` | Simulation, drift models and predictive inference |
-| `results/estimator/` | Model comparison, dynamic-panel and robustness experiments |
-| `results/classifiers/` | Four-qubit classifier evaluation |
-| `tests/` | Exactness and exchangeability tests |
-| `scripts/` | Reproduce published numerical results |
+```bash
+python -m pip install -e '.[full]'
+python experiments/run_estimator.py --mode full --out runs/estimator
+```
 
-See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for execution details.
+The trained-classifier experiments require the original four-qubit classifier input probabilities/labels (or checkpoints to reconstruct them) and the corresponding evaluation runner. The supplied classifier aggregates support numerical verification; they are not substitutes for generating new measurement streams. All results in the paper are from simulated measurement records, not quantum hardware.
+
+The separately calibrated permutation safeguard in the camera-ready manuscript was evaluated under its own experimental protocol, distinct from the original 320-record estimator experiment. Its original complete confirmatory reproduction is not yet included in this small repository and is **not** asserted by the verification script.
+
+## Results and numerical conventions
+
+- Six-model BMA versus LockQ on the factorial study: **0.82 percentage points (95% CI [0.02, 1.72])**; the five-model comparison has a different CI.
+- Trained-classifier low-margin threshold: **`abs(p_star - 0.5) <= 0.10`** (72 configurations).
+- LockQ recovers **22/32 = 68.75%** of the record-pooled dynamic oracle gain on **9,888** low-margin measurement records.
+- Recomputed dataset-label accuracy gain relative to five-model BMA is **1.04 points** (95% CI [0.51, 1.59]); the camera-ready text currently says 1.24 and needs correction.
+
+## Structure
+
+- `lockq/` — exact unordered likelihood.
+- `experiments/` — model and experiment implementations.
+- `results/` — saved evaluation tables needed by the verification script.
+- `scripts/verify_published_results.py` — reproduction of reported statistics from saved outputs.
+- `tests/` — exactness and pooled-number tests.
 
 ## Citation
 
-Please cite *LockQ: When Does Batch Order Matter in Finite-Shot Quantum Classification? An Exact Unordered Comparator* (IEEE QAI 2026).
-
-**License:** MIT.
+See `CITATION.cff`. Licensed under MIT.

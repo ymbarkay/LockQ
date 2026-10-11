@@ -1,74 +1,78 @@
 #!/usr/bin/env python3
-"""Recalculate the main numerical results in the LockQ paper.
+"""Compute LockQ's paper metrics from frozen experiment outputs.
 
-Uses individual classifier records when present, or the corresponding process summaries.
+This reads experiment outputs, not reruns quantum simulations. See README for
+commands and prerequisites for fresh simulation runs.
 """
-import json
 from pathlib import Path
-
+import hashlib
+import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1] / "results"
-main = pd.read_csv(ROOT / "estimator" / "sessions.csv")
-panel = pd.read_csv(ROOT / "estimator" / "dynamic_panel.csv")
+ROOT = Path(__file__).resolve().parents[1] / 'results'
+DYNAMIC = {'persistent_markov', 'abrupt_single_change', 'smooth_drift'}
 
-def recovery(table):
-    return float(table.v26_gain.sum() / table.oracle_gain.sum() * 100)
 
-record_path = ROOT / "classifiers" / "records.csv"
-if record_path.exists():
-    records = pd.read_csv(record_path)
-    vqc = records[
-        (records.reference_margin <= 0.10)
-        & records.true_family.isin(
-            ["persistent_markov", "abrupt_single_change", "smooth_drift"]
-        )
-    ]
-    record_count = len(vqc)
-    model_gain = int(vqc.v26_order_gain_record.sum())
-    oracle_gain = int(vqc.oracle_order_gain_record.sum())
-    vqc_scope = "archived individual measurement records"
-else:
-    by_process = pd.read_csv(ROOT / "classifiers" / "processes.csv")
-    vqc = by_process[
-        (by_process.scope == "low_margin")
-        & by_process.true_family.isin(
-            ["persistent_markov", "abrupt_single_change", "smooth_drift"]
-        )
-    ]
-    record_count = int(vqc.n_records.sum())
-    model_gain = int(round((vqc.n_records * vqc.v26_gain).sum()))
-    oracle_gain = int(round((vqc.n_records * vqc.oracle_gain).sum()))
-    vqc_scope = "archived process-level aggregates, not individual records"
+def seed(*parts):
+    return int.from_bytes(hashlib.sha256('::'.join(map(str, parts)).encode()).digest()[:8], 'little') % (2**63-1)
 
-measured = {
-    "five_model_bma_error_percent": float(main.bma5_ordered_error.mean() * 100),
-    "lockq_error_percent": float(main.v26_ordered_error.mean() * 100),
-    "dynamic_recovery_percent": recovery(panel),
-    "abrupt_recovery_percent": recovery(
-        panel[panel.true_family == "abrupt_single_change"]
-    ),
-    "coverage_percent": float(main.action_coverage.mean() * 100),
-    "low_margin_dynamic_vqc_records": record_count,
-    "vqc_model_net_corrections": model_gain,
-    "vqc_oracle_net_corrections": oracle_gain,
-    "vqc_recovery_percent": model_gain / oracle_gain * 100,
-}
-expected = {
-    "five_model_bma_error_percent": 8.56,
-    "lockq_error_percent": 7.74,
-    "dynamic_recovery_percent": 83.333333333,
-    "abrupt_recovery_percent": 87.5,
-    "coverage_percent": 86.08,
-    "low_margin_dynamic_vqc_records": 9888,
-    "vqc_model_net_corrections": 22,
-    "vqc_oracle_net_corrections": 32,
-    "vqc_recovery_percent": 68.75,
-}
-checks = {k: abs(v - expected[k]) < 0.011 for k, v in measured.items()}
-print(json.dumps({
-    "measured": measured, "checks": checks,
-    "all_pass": all(checks.values())
-}, indent=2))
-if not all(checks.values()):
-    raise SystemExit("Numerical audit FAILED")
+
+def boot_ci(x, seed_value, draws=20_000):
+    x = np.asarray(x, dtype=float)
+    rng = np.random.default_rng(seed_value)
+    idx = rng.integers(0, len(x), (draws, len(x)))
+    return tuple(np.quantile(x[idx].mean(axis=1), [0.025, 0.975]))
+
+
+def check(label, measured, expected, tolerance):
+    assert abs(measured-expected) <= tolerance, f'{label}: {measured} != {expected}'
+    print(f'{label:35s} {measured:8.4f}   OK')
+
+
+def main():
+    sessions = pd.read_csv(ROOT/'estimator'/'sessions.csv')
+    panel = pd.read_csv(ROOT/'estimator'/'dynamic_panel.csv')
+    processes = pd.read_csv(ROOT/'classifiers'/'processes.csv')
+    factorial = pd.read_csv(ROOT/'estimator'/'factorial_sessions.csv')
+    units = pd.read_csv(ROOT/'classifiers'/'configurations.csv')
+
+    assert len(sessions) == len(factorial) == 20
+    check('LockQ ordered error (%)', 100*sessions.v26_ordered_error.mean(), 7.74, .006)
+    check('Five-model BMA error (%)', 100*sessions.bma5_ordered_error.mean(), 8.56, .006)
+    check('Six-model BMA error (%)', 100*factorial.bma6_ordered_error.mean(), 8.56, .006)
+    check('Five-model stacking error (%)', 100*factorial.stack5_ordered_error.mean(), 7.60, .006)
+
+    dynamic = 100*panel.v26_gain.sum()/panel.oracle_gain.sum()
+    abrupt = panel[panel.true_family.eq('abrupt_single_change')]
+    abrupt_ratio = 100*abrupt.v26_gain.sum()/abrupt.oracle_gain.sum()
+    check('Dynamic-panel recovery (%)',dynamic,83.3333333,.05)
+    check('Abrupt recovery (%)', abrupt_ratio,87.5,.05)
+    check('Coverage (%)',100*sessions.action_coverage.mean(),86.08,.006)
+
+    bm6 = 100*(factorial.bma6_ordered_error - factorial.stack6_ordered_error)
+    bm5 = 100*(factorial.bma5_ordered_error - factorial.stack6_ordered_error)
+    check('Six-model BMA improvement (pp)',bm6.mean(),.82,.001)
+    assert np.allclose(boot_ci(bm6,seed('bma6_stack6')),[.02,1.72],atol=.005)
+    assert np.allclose(boot_ci(bm5,seed('bma5_stack6')),[0,1.72],atol=.005)
+    print('Factorial six-model BMA 95% CI       [0.02, 1.72] pp   OK')
+
+    low = units.query("scope == 'low_margin'")
+    assert len(low)==72 and low.n_records.sum()==9888
+    assert (low.max_reference_margin<=.1).all()
+    # Frozen classifier code computes abs(p_star - 0.5), not abs(2*p_star - 1).
+    gain = 100*low.label_gain_vs_bma5
+    ci = boot_ci(gain,seed('low_margin','label'))
+    check('Dataset-label gain (pp)',gain.mean(),1.0416666667,.001)
+    assert np.allclose(ci,[.50636574,1.59155575],atol=.005)
+    print('Dataset-label gain 95% CI            [0.51, 1.59] pp   OK')
+
+    dyn = processes[processes.scope.eq('low_margin') & processes.true_family.isin(DYNAMIC)]
+    n = int(dyn.n_records.sum())
+    num = int(round((dyn.n_records*dyn.v26_gain).sum()))
+    den = int(round((dyn.n_records*dyn.oracle_gain).sum()))
+    assert (n,num,den) == (9888,22,32)
+    check('Trained-classifier recovery (%)',100*num/den,68.75,.01)
+    print('All saved-output checks passed.')
+
+if __name__=='__main__':
+    main()
