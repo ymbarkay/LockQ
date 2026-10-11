@@ -5,7 +5,7 @@ LockQ computes an exact likelihood for an unordered multiset of measurement batc
 ## Install
 
 ```bash
-python -m pip install -e ".[full]"
+python -m pip install -e ".[verify]"
 python scripts/restore_sources.py
 ```
 
