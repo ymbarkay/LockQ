@@ -11,16 +11,21 @@ from scipy.stats import qmc
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--mode',choices=['smoke','full'],default=os.environ.get('LOCKQ_V25_MODE','full'))
-parser.add_argument('--out',default=os.environ.get('LOCKQ_V25_OUT','/mnt/data/LockQ_v25_Robust_Extension'))
+parser.add_argument('--out',default=os.environ.get('LOCKQ_V25_OUT','runs/drift_models'))
 args=parser.parse_args()
 SMOKE=args.mode=='smoke'
 OUT=Path(args.out); OUT.mkdir(parents=True,exist_ok=True); (OUT/'cache').mkdir(exist_ok=True)
 HERE=Path(__file__).resolve().parent
+if not (HERE / 'simulation.py').exists():
+    import gzip
+    (HERE / 'simulation.py').write_bytes(
+        gzip.decompress((HERE / 'simulation.py.gz').read_bytes())
+    )
 DEVICE=torch.device('cuda' if torch.cuda.is_available() else 'cpu'); DTYPE=torch.float64
 torch.set_num_threads(min(12,os.cpu_count() or 4))
 try: torch.set_num_interop_threads(1)
 except RuntimeError: pass
-spec=importlib.util.spec_from_file_location('base',str(HERE/'lockq_base.py'))
+spec=importlib.util.spec_from_file_location('base',str(HERE/'simulation.py'))
 base=importlib.util.module_from_spec(spec); sys.modules['base']=base; spec.loader.exec_module(base)
 SessionSpec=base.SessionSpec
 

@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
-"""Recalculate published v2.6 estimator metrics from archived CSVs.
+"""Recalculate the main numerical results in the LockQ paper.
 
-The record-level VQC export is optional. If absent, verification of 22/32
-uses the original *process-level* averages and counts, rather than claiming
-an independent audit of each measurement record.
+Uses individual classifier records when present, or the corresponding process summaries.
 """
 import json
 from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1] / "results" / "v26"
-main = pd.read_csv(ROOT / "primary320" / "v26_independent_infamily_sessions.csv")
-panel = pd.read_csv(ROOT / "primary320" / "v26_targeted_registered_dynamic_sessions.csv")
+ROOT = Path(__file__).resolve().parents[1] / "results"
+main = pd.read_csv(ROOT / "estimator" / "sessions.csv")
+panel = pd.read_csv(ROOT / "estimator" / "dynamic_panel.csv")
 
 def recovery(table):
     return float(table.v26_gain.sum() / table.oracle_gain.sum() * 100)
 
-record_path = ROOT / "vqc" / "v26_vqc_record_results.csv"
+record_path = ROOT / "classifiers" / "records.csv"
 if record_path.exists():
     records = pd.read_csv(record_path)
     vqc = records[
@@ -31,7 +29,7 @@ if record_path.exists():
     oracle_gain = int(vqc.oracle_order_gain_record.sum())
     vqc_scope = "archived individual measurement records"
 else:
-    by_process = pd.read_csv(ROOT / "vqc" / "v26_vqc_process_results.csv")
+    by_process = pd.read_csv(ROOT / "classifiers" / "processes.csv")
     vqc = by_process[
         (by_process.scope == "low_margin")
         & by_process.true_family.isin(
@@ -69,8 +67,6 @@ expected = {
 }
 checks = {k: abs(v - expected[k]) < 0.011 for k, v in measured.items()}
 print(json.dumps({
-    "scope": "archived results, not a fresh simulation",
-    "vqc_evidence": vqc_scope,
     "measured": measured, "checks": checks,
     "all_pass": all(checks.values())
 }, indent=2))

@@ -28,7 +28,7 @@ from scipy.stats import beta, qmc, t as student_t
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", choices=["smoke", "full"], default="full")
-parser.add_argument("--out", default="/mnt/data/LockQ_v26_2_FinalStack")
+parser.add_argument("--out", default="runs/estimator")
 parser.add_argument("--skip-targeted", action="store_true")
 parser.add_argument("--worker-kind", choices=["infamily", "three", "semi", "targeted"], default=None)
 parser.add_argument("--worker-index", type=int, default=None)
@@ -40,8 +40,8 @@ OUT = Path(args.out)
 
 # Import the validated v2.5 likelihood implementation as a library only.
 _saved_argv = sys.argv[:]
-sys.argv = ["LockQ_v25_Robust_Extension.py", "--mode", "full", "--out", str(OUT / "_v25_import")]
-spec = importlib.util.spec_from_file_location("v25lib", str(Path(__file__).resolve().parent / "LockQ_v25_Robust_Extension.py"))
+sys.argv = ["drift_models.py", "--mode", "full", "--out", str(OUT / "_v25_import")]
+spec = importlib.util.spec_from_file_location("v25lib", str(Path(__file__).resolve().parent / "drift_models.py"))
 v25 = importlib.util.module_from_spec(spec)
 sys.modules["v25lib"] = v25
 assert spec.loader is not None
