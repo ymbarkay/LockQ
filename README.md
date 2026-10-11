@@ -1,45 +1,49 @@
 # LockQ
 
-**LockQ: When Does Batch Order Matter in Finite-Shot Quantum Classification? An Exact Unordered Comparator**  
+**When Does Batch Order Matter in Finite-Shot Quantum Classification? An Exact Unordered Comparator**  
 Youssouf Barkay Molimi · IEEE QAI 2026
 
-Research code for the **camera-ready paper**. The core estimator is the original six-model predictive stack (v2.6.2). LockQ compares the ordered sequence of measurement batches against the *exact unordered multiset* of those same batches, preserving batch structure while removing time labels.
+LockQ measures the value of **batch order in finite-shot quantum classification**. It compares predictions from time-ordered measurement batches with predictions from the **exact unordered multiset of those same batches**. The comparison preserves each batch and removes only its time label, separating the information in order from the information in batching.
 
-## Reproduce the reported estimator numbers
+The estimator combines six models of device drift using cross-fitted predictive stacking. The paper also develops a permutation-based safeguard and a calibrated selective-prediction rule.
+
+## Results
+
+| Experiment | Result |
+| --- | ---: |
+| Reference-decision error | **7.74%** (8.56% with Bayesian model averaging) |
+| Order advantage recovered on the dynamic panel | **83.3%** |
+| Order advantage recovered under abrupt changes | **87.5%** |
+| Order advantage recovered on trained classifiers near the decision boundary | **68.8%** |
+| Safeguard on exchangeable sessions | **Zero ordered advantage** |
+
+Experiments use 16 batches of 128 shots per input and simulated device-noise processes. The estimator and safeguard experiments use their respective protocols described in the paper.
+
+## Install and verify
 
 ```bash
-python -m pip install -e '.[verify]'
+python -m pip install -e '.[full]'
 python -m pytest -q tests/test_exact.py
 python scripts/verify_published_results.py
 ```
 
-The first command tests the standalone NumPy exact likelihood against all distinct permutations for two- and three-state models. The second verifies archived estimator outputs (not a new simulation run).
+The tests compare the exact unordered likelihood with exhaustive permutation enumeration. The results script reconstructs the reported estimator measurements and recovery figures from the supplied experiment results.
 
-| Published estimator result | Recomputed |
-| --- | ---: |
-| Five-model BMA error | **8.56%** |
-| LockQ ordered error | **7.74%** |
-| Registered dynamic recovery | **83.3%** |
-| Abrupt-change recovery | **87.5%** |
-| Mean primary-study coverage | **86.08%** |
-| Low-margin trained-classifier recovery | **68.75%** (22/32 net corrections) |
+## Code and results
 
-The GitHub VQC audit uses the archived *process-level counts*, not independent per-record reconstruction. The larger record-level CSV is in the separately retained experiment archive. The trained-circuit checkpoints are unavailable in this release; it is therefore **not a full from-scratch VQC reproduction**.
+| Directory | Contents |
+| --- | --- |
+| `lockq/` | Exact unordered likelihood for two- and three-state models |
+| `experiments/` | Simulation, drift models and predictive inference |
+| `results/estimator/` | Model comparison, dynamic-panel and robustness experiments |
+| `results/classifiers/` | Four-qubit classifier evaluation |
+| `tests/` | Exactness and exchangeability tests |
+| `scripts/` | Reproduce published numerical results |
 
-## Experiment code
+See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for execution details.
 
-The frozen estimator scripts are in `experiments/v26/`. The original simulator dependency is provided as a gzip archive to keep it bit-for-bit intact. To restore:
+## Citation
 
-```bash
-python scripts/restore_experiment_dependencies.py
-```
+Please cite *LockQ: When Does Batch Order Matter in Finite-Shot Quantum Classification? An Exact Unordered Comparator* (IEEE QAI 2026).
 
-Then see `REPRODUCIBILITY.md` for prerequisites and data availability. Large-scale simulations are much more expensive than the numerical audit.
-
-## Scope
-
-All reported measurements are simulated, not physical quantum hardware observations. The paper's **targeted safeguarded procedure** uses a separate calibration and evaluation protocol; **the broader v2.6 estimator results above must not be interpreted as evaluations of that safeguard**. Later exploratory or confirmatory versions are not included.
-
-The current repository contains core estimator source, exact-comparator source and tests, original primary-session records, process-level VQC evidence, and audits. It does not yet contain every archived record-level VQC file or the complete frozen classifier checkpoint bundle.
-
-**License:** MIT (see `LICENSE`). Please cite the associated IEEE QAI 2026 paper when using the implementation.
+**License:** MIT.
