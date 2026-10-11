@@ -16,11 +16,6 @@ args=parser.parse_args()
 SMOKE=args.mode=='smoke'
 OUT=Path(args.out); OUT.mkdir(parents=True,exist_ok=True); (OUT/'cache').mkdir(exist_ok=True)
 HERE=Path(__file__).resolve().parent
-if not (HERE / 'simulation.py').exists():
-    import gzip
-    (HERE / 'simulation.py').write_bytes(
-        gzip.decompress((HERE / 'simulation.py.gz').read_bytes())
-    )
 DEVICE=torch.device('cuda' if torch.cuda.is_available() else 'cpu'); DTYPE=torch.float64
 torch.set_num_threads(min(12,os.cpu_count() or 4))
 try: torch.set_num_interop_threads(1)
@@ -43,7 +38,13 @@ N_CAL=24 if SMOKE else 72
 PER_STRAT_TEST=8 if SMOKE else 40
 N_FOLDS=3 if SMOKE else 4
 
-RANGES={'persistence':[0.55,0.995], 'occupancy':[0.10,0.90], 'depolarizing_gap':[0.08,0.28], 'readout_gap':[0.04,0.22], 'readout_asymmetry':[-0.14,0.14], 'calibration_log_gap':[-0.75,0.30], 'drift_amplitude':[0.08,0.55], 'change_center':[0.20,0.80], 'change_spread':[0.05,0.25]}
+RANGES={
+    'persistence':[0.55,0.995], 'occupancy':[0.10,0.90],
+    'depolarizing_gap':[0.08,0.28], 'readout_gap':[0.04,0.22],
+    'readout_asymmetry':[-0.14,0.14], 'calibration_log_gap':[-0.75,0.30],
+    'drift_amplitude':[0.08,0.55], 'change_center':[0.20,0.80],
+    'change_spread':[0.05,0.25]
+}
 
 def seed(*parts): return int.from_bytes(hashlib.sha256('::'.join(map(str,parts)).encode()).digest()[:8],'little')%(2**63-1)
 

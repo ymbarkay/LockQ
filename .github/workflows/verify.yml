@@ -1,5 +1,4 @@
 name: Test LockQ
-
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
@@ -11,6 +10,6 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install -e ".[verify]"
-      - run: python -m py_compile experiments/simulation.py experiments/drift_models.py experiments/run_estimator.py
+      - run: python -m compileall -q experiments
       - run: python -m pytest -q tests
       - run: python scripts/verify_published_results.py

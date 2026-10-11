@@ -28,7 +28,7 @@ from scipy.stats import beta, qmc, t as student_t
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", choices=["smoke", "full"], default="full")
-parser.add_argument("--out", default="runs/estimator")
+parser.add_argument("--out", default="/mnt/data/LockQ_v26_2_FinalStack")
 parser.add_argument("--skip-targeted", action="store_true")
 parser.add_argument("--worker-kind", choices=["infamily", "three", "semi", "targeted"], default=None)
 parser.add_argument("--worker-index", type=int, default=None)
